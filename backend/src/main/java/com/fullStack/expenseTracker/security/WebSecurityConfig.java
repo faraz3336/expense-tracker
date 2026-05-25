@@ -86,27 +86,26 @@ public class WebSecurityConfig {
                         .permitAll()
 
                         .requestMatchers(
-                                "/health")
-                        .permitAll()
-
-                        .requestMatchers(
+                                "/health",
                                 "/error")
                         .permitAll()
 
                         .requestMatchers(
-                                "/mywallet/auth/**")
+                                "/auth/**",
+                                "/auth/signup",
+                                "/auth/signin")
                         .permitAll()
 
                         .requestMatchers(
-                                "/mywallet/auth/signup")
+                                "/mywallet/auth/**",
+                                "/mywallet/auth/signup",
+                                "/mywallet/auth/signin")
                         .permitAll()
 
                         .requestMatchers(
-                                "/mywallet/user/**")
-                        .permitAll()
-
-                        .requestMatchers(
-                                "/mywallet/transactiontype/**")
+                                "/mywallet/user/**",
+                                "/mywallet/transactiontype/**",
+                                "/mywallet/category/**")
                         .permitAll()
 
                         .anyRequest()
