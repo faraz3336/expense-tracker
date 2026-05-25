@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: expense-tracker-backend
+    name: expense-tracker-backend-v2
     runtime: docker
     plan: free
     dockerfilePath: ./backend/Dockerfile
