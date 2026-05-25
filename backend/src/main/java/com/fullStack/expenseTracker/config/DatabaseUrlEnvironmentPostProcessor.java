@@ -6,7 +6,6 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -90,7 +89,6 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
         params.putIfAbsent("sslmode", "require");
         params.put("currentSchema", DEFAULT_SCHEMA);
         params.put("prepareThreshold", "0");
-        params.put("user", encode(username));
 
         String jdbcUrl = "jdbc:postgresql://%s:%d/%s?%s".formatted(
                 host,
@@ -143,10 +141,6 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
 
     private String decode(String value) {
         return URLDecoder.decode(value, StandardCharsets.UTF_8);
-    }
-
-    private String encode(String value) {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
     private boolean hasText(String value) {
