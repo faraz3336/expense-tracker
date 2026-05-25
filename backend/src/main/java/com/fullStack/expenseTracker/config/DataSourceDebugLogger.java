@@ -7,16 +7,21 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import javax.sql.DataSource;
 import java.net.URI;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 @Component
 public class DataSourceDebugLogger implements ApplicationRunner {
     private static final Logger log = LoggerFactory.getLogger(DataSourceDebugLogger.class);
 
     private final Environment environment;
+    private final DataSource dataSource;
 
-    public DataSourceDebugLogger(Environment environment) {
+    public DataSourceDebugLogger(Environment environment, DataSource dataSource) {
         this.environment = environment;
+        this.dataSource = dataSource;
     }
 
     @Override
@@ -25,6 +30,15 @@ public class DataSourceDebugLogger implements ApplicationRunner {
         String username = environment.getProperty("spring.datasource.username", "");
         log.info("Datasource configured for host '{}' and user '{}'", extractHost(datasourceUrl), username);
         log.info("Datasource default schema '{}'", environment.getProperty("spring.jpa.properties.hibernate.default_schema", ""));
+        logConnectionEstablished();
+    }
+
+    private void logConnectionEstablished() {
+        try (Connection ignored = dataSource.getConnection()) {
+            log.info("DATASOURCE_CONNECTION_ESTABLISHED");
+        } catch (SQLException ex) {
+            log.warn("Datasource connection check failed: {}", ex.getMessage());
+        }
     }
 
     private String extractHost(String datasourceUrl) {
