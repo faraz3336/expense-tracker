@@ -5,8 +5,7 @@ import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -46,65 +45,35 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
     }
 
     private DatabaseConnection parse(String databaseUrl) {
-        String withoutScheme = removeScheme(databaseUrl.trim());
-        int queryStart = withoutScheme.indexOf('?');
-        String authorityAndPath = queryStart == -1 ? withoutScheme : withoutScheme.substring(0, queryStart);
-        String rawQuery = queryStart == -1 ? "" : withoutScheme.substring(queryStart + 1);
-
-        int credentialsEnd = authorityAndPath.lastIndexOf('@');
-        if (credentialsEnd == -1) {
+        URI uri = URI.create(databaseUrl.trim().replaceFirst("^postgresql://", "postgres://"));
+        String userInfo = uri.getUserInfo();
+        if (!hasText(userInfo)) {
             throw new IllegalArgumentException("Database URL must include username and password");
         }
 
-        String userInfo = authorityAndPath.substring(0, credentialsEnd);
-        String hostAndPath = authorityAndPath.substring(credentialsEnd + 1);
-        int userPasswordSeparator = userInfo.indexOf(':');
-        if (userPasswordSeparator == -1) {
+        String[] creds = userInfo.split(":", 2);
+        if (creds.length < 2) {
             throw new IllegalArgumentException("Database URL must include a password");
         }
 
-        String username = decode(userInfo.substring(0, userPasswordSeparator));
-        String password = decode(userInfo.substring(userPasswordSeparator + 1));
-
-        int pathStart = hostAndPath.indexOf('/');
-        String hostPort = pathStart == -1 ? hostAndPath : hostAndPath.substring(0, pathStart);
-        String database = pathStart == -1 ? "postgres" : hostAndPath.substring(pathStart + 1);
+        String username = creds[0];
+        String password = creds[1];
+        String database = uri.getPath() == null ? "postgres" : uri.getPath().replaceFirst("^/", "");
         if (!hasText(database)) {
             database = "postgres";
         }
-
-        String host;
-        int port;
-        int portStart = hostPort.lastIndexOf(':');
-        if (portStart > -1) {
-            host = hostPort.substring(0, portStart);
-            port = Integer.parseInt(hostPort.substring(portStart + 1));
-        } else {
-            host = hostPort;
-            port = 5432;
-        }
-
-        Map<String, String> params = parseQuery(rawQuery);
-        params.remove("pgbouncer");
-        params.putIfAbsent("sslmode", "require");
-        params.put("currentSchema", DEFAULT_SCHEMA);
-        params.put("prepareThreshold", "0");
+        String host = uri.getHost();
+        int port = uri.getPort() == -1 ? 5432 : uri.getPort();
+        String sslMode = parseQuery(uri.getRawQuery()).getOrDefault("sslmode", "require");
 
         String jdbcUrl = "jdbc:postgresql://%s:%d/%s?%s".formatted(
                 host,
                 port,
                 database,
-                toQueryString(params)
+                "sslmode=" + sslMode
         );
 
         return new DatabaseConnection(jdbcUrl, username, password, host);
-    }
-
-    private String removeScheme(String databaseUrl) {
-        return databaseUrl
-                .replaceFirst("^postgresql://", "")
-                .replaceFirst("^postgres://", "")
-                .replaceFirst("^jdbc:postgresql://", "");
     }
 
     private Map<String, String> parseQuery(String rawQuery) {
@@ -123,13 +92,6 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
         return params;
     }
 
-    private String toQueryString(Map<String, String> params) {
-        return params.entrySet().stream()
-                .map(entry -> entry.getKey() + "=" + entry.getValue())
-                .reduce((left, right) -> left + "&" + right)
-                .orElse("");
-    }
-
     private String firstText(String... values) {
         for (String value : values) {
             if (hasText(value)) {
@@ -137,10 +99,6 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
             }
         }
         return null;
-    }
-
-    private String decode(String value) {
-        return URLDecoder.decode(value, StandardCharsets.UTF_8);
     }
 
     private boolean hasText(String value) {
