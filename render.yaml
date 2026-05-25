@@ -5,7 +5,7 @@ services:
     plan: free
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    healthCheckPath: /mywallet/transactiontype/all
+    healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
         sync: false

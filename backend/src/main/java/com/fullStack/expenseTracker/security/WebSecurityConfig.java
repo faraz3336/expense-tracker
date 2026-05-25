@@ -57,7 +57,8 @@ public class WebSecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/mywallet/auth/**").permitAll()
+                        auth.requestMatchers("/health").permitAll()
+                                .requestMatchers("/mywallet/auth/**").permitAll()
                                 .requestMatchers("/mywallet/transactiontype/**").permitAll()
                                 .requestMatchers("/mywallet/category/**").permitAll()
                                 .requestMatchers("/mywallet/transaction/**").permitAll()
