@@ -36,7 +36,9 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
 
         environment.getPropertySources().addFirst(new MapPropertySource(PROPERTY_SOURCE_NAME, properties));
         System.out.println("DB_USER=" + connection.username());
+        System.out.println("DB_URL=" + connection.jdbcUrl());
         log.info("DB_USER=" + connection.username());
+        log.info("DB_URL=" + connection.jdbcUrl());
         log.info("Datasource parsed for host '" + connection.host() + "' and user '" + connection.username() + "'");
         log.info("Datasource schema '" + DEFAULT_SCHEMA + "'");
     }
@@ -55,47 +57,20 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
 
         String username = creds[0];
         String password = creds[1];
-        String database = databaseName(uri.getPath());
-        if (!hasText(database)) {
+        String path = uri.getPath();
+        if (!hasText(path)) {
             throw new IllegalArgumentException("Database URL must include a database name");
         }
         String host = uri.getHost();
         int port = uri.getPort() == -1 ? 5432 : uri.getPort();
-        String sslMode = parseQuery(uri.getRawQuery()).getOrDefault("sslmode", "require");
+        String query = uri.getRawQuery();
 
-        String jdbcUrl = "jdbc:postgresql://%s:%d/%s?%s".formatted(
-                host,
-                port,
-                database,
-                "sslmode=" + sslMode
-        );
+        String jdbcUrl = "jdbc:postgresql://" + host + ":" + port + path;
+        if (hasText(query)) {
+            jdbcUrl += "?" + query;
+        }
 
         return new DatabaseConnection(jdbcUrl, username, password, host);
-    }
-
-    private String databaseName(String path) {
-        if (!hasText(path)) {
-            return "";
-        }
-
-        String[] parts = path.split("/", 2);
-        return parts.length == 2 ? parts[1] : parts[0];
-    }
-
-    private Map<String, String> parseQuery(String rawQuery) {
-        Map<String, String> params = new LinkedHashMap<>();
-        if (!hasText(rawQuery)) {
-            return params;
-        }
-
-        for (String pair : rawQuery.split("&")) {
-            if (!hasText(pair)) {
-                continue;
-            }
-            String[] parts = pair.split("=", 2);
-            params.put(parts[0], parts.length > 1 ? parts[1] : "");
-        }
-        return params;
     }
 
     private String firstText(String... values) {

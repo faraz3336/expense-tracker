@@ -19,7 +19,7 @@ class DatabaseUrlEnvironmentPostProcessorTests {
                 .isEqualTo("postgres.lcqsxhuzafkqmumflntm");
         assertThat(environment.getProperty("spring.datasource.password")).isEqualTo("p@ss");
         assertThat(environment.getProperty("spring.datasource.url"))
-                .isEqualTo("jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require");
+                .isEqualTo("jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true&sslmode=require");
     }
 
     @Test
