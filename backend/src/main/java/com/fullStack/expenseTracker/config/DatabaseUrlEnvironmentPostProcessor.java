@@ -9,8 +9,10 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProcessor {
+    private static final Logger log = Logger.getLogger(DatabaseUrlEnvironmentPostProcessor.class.getName());
     private static final String PROPERTY_SOURCE_NAME = "databaseUrlProperties";
     private static final String DEFAULT_SCHEMA = "expense_tracker";
 
@@ -31,9 +33,15 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
         properties.put("spring.datasource.url", connection.jdbcUrl());
         properties.put("spring.datasource.username", connection.username());
         properties.put("spring.datasource.password", connection.password());
+        properties.put("spring.datasource.hikari.username", connection.username());
+        properties.put("spring.datasource.hikari.password", connection.password());
+        properties.put("spring.datasource.hikari.data-source-properties.user", connection.username());
+        properties.put("spring.datasource.hikari.data-source-properties.password", connection.password());
         properties.put("spring.datasource.driver-class-name", "org.postgresql.Driver");
 
         environment.getPropertySources().addFirst(new MapPropertySource(PROPERTY_SOURCE_NAME, properties));
+        log.info("Datasource parsed for host '" + connection.host() + "' and user '" + connection.username() + "'");
+        log.info("Datasource schema '" + DEFAULT_SCHEMA + "'");
     }
 
     private DatabaseConnection parse(String databaseUrl) {
