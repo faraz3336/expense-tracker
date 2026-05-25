@@ -2,7 +2,6 @@ package com.fullStack.expenseTracker.services.impls;
 
 
 import com.fullStack.expenseTracker.dto.reponses.PageResponseDto;
-import com.fullStack.expenseTracker.services.NotificationService;
 import com.fullStack.expenseTracker.services.UserService;
 import com.fullStack.expenseTracker.dto.reponses.ApiResponseDto;
 import com.fullStack.expenseTracker.enums.ApiResponseStatus;
@@ -40,9 +39,6 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private NotificationService notificationService;
 
     @Autowired
     RoleFactory roleFactory;

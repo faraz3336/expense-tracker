@@ -10,7 +10,7 @@ import com.fullStack.expenseTracker.models.Role;
 import com.fullStack.expenseTracker.models.User;
 import com.fullStack.expenseTracker.repository.UserRepository;
 import com.fullStack.expenseTracker.services.AuthService;
-import com.fullStack.expenseTracker.services.NotificationService;
+import com.fullStack.expenseTracker.services.BrevoEmailService;
 import com.fullStack.expenseTracker.services.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +35,7 @@ public class AuthServiceImpl implements AuthService {
     private UserRepository userRepository;
 
     @Autowired
-    private NotificationService notificationService;
+    private BrevoEmailService brevoEmailService;
 
     @Autowired
     RoleFactory roleFactory;
@@ -60,7 +60,7 @@ public class AuthServiceImpl implements AuthService {
             User user = createUser(signUpRequestDto);
 
             userRepository.save(user);
-            notificationService.sendUserRegistrationVerificationEmail(user);
+            brevoEmailService.sendVerificationEmail(user);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponseDto<>(
                     ApiResponseStatus.SUCCESS, HttpStatus.CREATED,"Verification email has been successfully sent!"
@@ -109,7 +109,7 @@ public class AuthServiceImpl implements AuthService {
             user.setEnabled(false);
 
             userRepository.save(user);
-            notificationService.sendUserRegistrationVerificationEmail(user);
+            brevoEmailService.sendVerificationEmail(user);
 
             return ResponseEntity.status(HttpStatus.OK).body(new ApiResponseDto<>(
                     ApiResponseStatus.SUCCESS, HttpStatus.OK, "Verification email has been resent successfully!")
@@ -130,7 +130,7 @@ public class AuthServiceImpl implements AuthService {
                 user.setVerificationCodeExpiryTime(calculateCodeExpirationTime());
                 userRepository.save(user);
 
-                notificationService.sendForgotPasswordVerificationEmail(user);
+                brevoEmailService.sendVerificationEmail(user);
                 return ResponseEntity.status(HttpStatus.ACCEPTED).body(new ApiResponseDto<>(
                         ApiResponseStatus.SUCCESS,
                         HttpStatus.ACCEPTED,

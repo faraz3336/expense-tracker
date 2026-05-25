@@ -7,14 +7,11 @@ import com.fullStack.expenseTracker.exceptions.UserAlreadyExistsException;
 import com.fullStack.expenseTracker.exceptions.UserNotFoundException;
 import com.fullStack.expenseTracker.exceptions.UserServiceLogicException;
 import com.fullStack.expenseTracker.exceptions.UserVerificationFailedException;
-import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.io.UnsupportedEncodingException;
 
 @RestController
 @CrossOrigin(originPatterns = {"http://localhost:3000", "https://*.vercel.app"})
@@ -25,7 +22,7 @@ public class SignUpController {
 
     @PostMapping("/signup")
     public ResponseEntity<ApiResponseDto<?>> registerUser(@RequestBody @Valid SignUpRequestDto signUpRequestDto)
-            throws MessagingException, UnsupportedEncodingException, UserAlreadyExistsException, UserServiceLogicException {
+            throws UserAlreadyExistsException, UserServiceLogicException {
         return authService.save(signUpRequestDto);
     }
 
@@ -37,7 +34,7 @@ public class SignUpController {
 
     @GetMapping("/signup/resend")
     public ResponseEntity<ApiResponseDto<?>> resendVerificationCode(@Param("email") String email)
-            throws UserNotFoundException, MessagingException, UnsupportedEncodingException, UserServiceLogicException {
+            throws UserNotFoundException, UserServiceLogicException {
         return authService.resendVerificationCode(email);
     }
 
