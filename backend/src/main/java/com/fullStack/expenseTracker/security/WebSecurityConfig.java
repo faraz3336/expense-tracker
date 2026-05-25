@@ -5,6 +5,7 @@ import com.fullStack.expenseTracker.security.jwt.AuthTokenFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -20,6 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableMethodSecurity
 public class WebSecurityConfig {
+
     @Autowired
     UserDetailsServiceImpl userDetailsService;
 
@@ -33,16 +35,23 @@ public class WebSecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
+
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
 
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setUserDetailsService(
+                userDetailsService);
+
+        authProvider.setPasswordEncoder(
+                passwordEncoder());
 
         return authProvider;
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration authConfig)
+            throws Exception {
+
         return authConfig.getAuthenticationManager();
     }
 
@@ -52,7 +61,9 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(
+            HttpSecurity http)
+            throws Exception {
 
         http
                 .cors(cors -> {
@@ -68,12 +79,41 @@ public class WebSecurityConfig {
                                 SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/health").permitAll()
-                        .requestMatchers("/mywallet/auth/**").permitAll()
-                        .requestMatchers("/mywallet/user/**").permitAll()
-                        .anyRequest().authenticated());
 
-        http.authenticationProvider(authenticationProvider());
+                        .requestMatchers(
+                                HttpMethod.OPTIONS,
+                                "/**")
+                        .permitAll()
+
+                        .requestMatchers(
+                                "/health")
+                        .permitAll()
+
+                        .requestMatchers(
+                                "/error")
+                        .permitAll()
+
+                        .requestMatchers(
+                                "/mywallet/auth/**")
+                        .permitAll()
+
+                        .requestMatchers(
+                                "/mywallet/auth/signup")
+                        .permitAll()
+
+                        .requestMatchers(
+                                "/mywallet/user/**")
+                        .permitAll()
+
+                        .requestMatchers(
+                                "/mywallet/transactiontype/**")
+                        .permitAll()
+
+                        .anyRequest()
+                        .authenticated());
+
+        http.authenticationProvider(
+                authenticationProvider());
 
         http.addFilterBefore(
                 authenticationJwtTokenFilter(),
