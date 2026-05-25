@@ -32,20 +32,17 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
         properties.put("spring.datasource.url", connection.jdbcUrl());
         properties.put("spring.datasource.username", connection.username());
         properties.put("spring.datasource.password", connection.password());
-        properties.put("spring.datasource.hikari.username", connection.username());
-        properties.put("spring.datasource.hikari.password", connection.password());
-        properties.put("spring.datasource.hikari.data-source-properties.user", connection.username());
-        properties.put("spring.datasource.hikari.data-source-properties.password", connection.password());
         properties.put("spring.datasource.driver-class-name", "org.postgresql.Driver");
 
         environment.getPropertySources().addFirst(new MapPropertySource(PROPERTY_SOURCE_NAME, properties));
+        System.out.println("DB_USER=" + connection.username());
         log.info("DB_USER=" + connection.username());
         log.info("Datasource parsed for host '" + connection.host() + "' and user '" + connection.username() + "'");
         log.info("Datasource schema '" + DEFAULT_SCHEMA + "'");
     }
 
     private DatabaseConnection parse(String databaseUrl) {
-        URI uri = URI.create(databaseUrl.trim().replaceFirst("^postgresql://", "postgres://"));
+        URI uri = URI.create(databaseUrl.trim());
         String userInfo = uri.getUserInfo();
         if (!hasText(userInfo)) {
             throw new IllegalArgumentException("Database URL must include username and password");
@@ -58,9 +55,9 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
 
         String username = creds[0];
         String password = creds[1];
-        String database = uri.getPath() == null ? "postgres" : uri.getPath().replaceFirst("^/", "");
+        String database = databaseName(uri.getPath());
         if (!hasText(database)) {
-            database = "postgres";
+            throw new IllegalArgumentException("Database URL must include a database name");
         }
         String host = uri.getHost();
         int port = uri.getPort() == -1 ? 5432 : uri.getPort();
@@ -74,6 +71,15 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
         );
 
         return new DatabaseConnection(jdbcUrl, username, password, host);
+    }
+
+    private String databaseName(String path) {
+        if (!hasText(path)) {
+            return "";
+        }
+
+        String[] parts = path.split("/", 2);
+        return parts.length == 2 ? parts[1] : parts[0];
     }
 
     private Map<String, String> parseQuery(String rawQuery) {

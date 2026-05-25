@@ -18,10 +18,6 @@ class DatabaseUrlEnvironmentPostProcessorTests {
         assertThat(environment.getProperty("spring.datasource.username"))
                 .isEqualTo("postgres.lcqsxhuzafkqmumflntm");
         assertThat(environment.getProperty("spring.datasource.password")).isEqualTo("p@ss");
-        assertThat(environment.getProperty("spring.datasource.hikari.username"))
-                .isEqualTo("postgres.lcqsxhuzafkqmumflntm");
-        assertThat(environment.getProperty("spring.datasource.hikari.data-source-properties.user"))
-                .isEqualTo("postgres.lcqsxhuzafkqmumflntm");
         assertThat(environment.getProperty("spring.datasource.url"))
                 .isEqualTo("jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require");
     }
