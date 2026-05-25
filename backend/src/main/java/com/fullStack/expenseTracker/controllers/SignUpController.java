@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.UnsupportedEncodingException;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(originPatterns = {"http://localhost:3000", "https://*.vercel.app"})
 @RequestMapping("/mywallet/auth")
 public class SignUpController {
     @Autowired

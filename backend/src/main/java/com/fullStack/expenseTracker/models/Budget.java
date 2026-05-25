@@ -1,9 +1,6 @@
 package com.fullStack.expenseTracker.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,7 +15,9 @@ public class Budget {
     long budgetId;
     long userId;
     double amount;
+    @Column(name = "budget_month")
     int month;
+    @Column(name = "budget_year")
     long year;
 
     public Budget(long userId, double amount, int month, long year) {

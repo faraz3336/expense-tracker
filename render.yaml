@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: expense-tracker-backend
+    runtime: java
+    plan: free
+    rootDir: backend
+    buildCommand: ./mvnw clean install
+    startCommand: java -jar target/*.jar
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: APP_JWT_SECRET
+        sync: false
+      - key: SPRING_MAIL_USERNAME
+        sync: false
+      - key: SPRING_MAIL_PASSWORD
+        sync: false
+      - key: APP_USER_PROFILE_UPLOAD_DIR
+        value: ./uploads/user/profile
+      - key: JAVA_VERSION
+        value: 17

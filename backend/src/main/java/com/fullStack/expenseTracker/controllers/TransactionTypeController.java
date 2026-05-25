@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(originPatterns = {"http://localhost:3000", "https://*.vercel.app"})
 @RestController
 @RequestMapping("/mywallet/transactiontype")
 public class TransactionTypeController {

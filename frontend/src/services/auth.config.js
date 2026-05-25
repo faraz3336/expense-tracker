@@ -1,3 +1,8 @@
-const API_BASE_URL = "http://localhost:8080/mywallet";
+const DEFAULT_API_URL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:8080/mywallet"
+    : "https://expense-tracker-backend.onrender.com/mywallet";
 
-export default API_BASE_URL;
+const API_BASE_URL = process.env.REACT_APP_API_URL || DEFAULT_API_URL;
+
+export default API_BASE_URL.replace(/\/$/, "");
