@@ -1,0 +1,9 @@
+target/
+.idea/
+uploads/
+*.iml
+*.log
+.env
+.env.*
+HELP.md
+mvnw.cmd

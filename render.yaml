@@ -1,11 +1,11 @@
 services:
   - type: web
     name: expense-tracker-backend
-    runtime: java
+    runtime: docker
     plan: free
-    rootDir: backend
-    buildCommand: ./mvnw clean install
-    startCommand: java -jar target/*.jar
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /mywallet/transactiontype/all
     envVars:
       - key: DATABASE_URL
         sync: false
@@ -19,5 +19,3 @@ services:
         sync: false
       - key: APP_USER_PROFILE_UPLOAD_DIR
         value: ./uploads/user/profile
-      - key: JAVA_VERSION
-        value: 17
