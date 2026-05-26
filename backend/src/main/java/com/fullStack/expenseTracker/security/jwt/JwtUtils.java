@@ -1,6 +1,9 @@
 package com.fullStack.expenseTracker.security.jwt;
 
 import java.security.Key;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 import com.fullStack.expenseTracker.security.UserDetailsImpl;
@@ -37,7 +40,34 @@ public class JwtUtils {
     }
 
     private Key key() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+        byte[] keyBytes = resolveKeyBytes();
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    private byte[] resolveKeyBytes() {
+        byte[] rawKeyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+
+        try {
+            byte[] decodedKeyBytes = Decoders.BASE64.decode(jwtSecret);
+            if (decodedKeyBytes.length >= 32) {
+                logger.info("JWT secret resolved from Base64 value");
+                return decodedKeyBytes;
+            }
+        } catch (RuntimeException ex) {
+            logger.info("JWT secret is not Base64 encoded; using raw value");
+        }
+
+        if (rawKeyBytes.length >= 32) {
+            logger.info("JWT secret resolved from raw value");
+            return rawKeyBytes;
+        }
+
+        logger.warn("JWT secret is shorter than 32 bytes; deriving HS256 key with SHA-256");
+        try {
+            return MessageDigest.getInstance("SHA-256").digest(rawKeyBytes);
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("SHA-256 is not available for JWT key derivation", ex);
+        }
     }
 
     public String getUserNameFromJwtToken(String token) {
