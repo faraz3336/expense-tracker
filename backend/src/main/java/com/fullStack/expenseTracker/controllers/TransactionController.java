@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin(originPatterns = {"http://localhost:3000", "https://*.vercel.app"})
 @RestController
-@RequestMapping("/mywallet/transaction")
+@RequestMapping({"/mywallet/transaction", "/mywallet/transactions"})
 public class TransactionController {
 
     @Autowired
@@ -37,13 +37,13 @@ public class TransactionController {
 
     @GetMapping("/getByUser")
     @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<ApiResponseDto<?>> getTransactionsByUser(@Param("email") String email,
-                                                                   @Param("pageNumber") int pageNumber,
-                                                                   @Param("pageSize") int pageSize,
-                                                                   @Param("searchKey") String searchKey,
-                                                                   @Param("sortField") String sortField,
-                                                                   @Param("sortDirec") String sortDirec,
-                                                                   @Param("transactionType") String transactionType)
+    public ResponseEntity<ApiResponseDto<?>> getTransactionsByUser(@RequestParam("email") String email,
+                                                                   @RequestParam(value = "pageNumber", defaultValue = "0") int pageNumber,
+                                                                   @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
+                                                                   @RequestParam(value = "searchKey", defaultValue = "") String searchKey,
+                                                                   @RequestParam(value = "sortField", defaultValue = "date") String sortField,
+                                                                   @RequestParam(value = "sortDirec", defaultValue = "DESC") String sortDirec,
+                                                                   @RequestParam(value = "transactionType", defaultValue = "") String transactionType)
             throws UserNotFoundException, TransactionServiceLogicException {
 
         return transactionService.getTransactionsByUser(email, pageNumber, pageSize, searchKey, sortField, sortDirec, transactionType);

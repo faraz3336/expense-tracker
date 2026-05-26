@@ -7,7 +7,9 @@ import com.fullStack.expenseTracker.services.CategoryService;
 import com.fullStack.expenseTracker.services.TransactionService;
 import com.fullStack.expenseTracker.services.UserService;
 import com.fullStack.expenseTracker.dto.requests.TransactionRequestDto;
+import com.fullStack.expenseTracker.models.Category;
 import com.fullStack.expenseTracker.models.Transaction;
+import com.fullStack.expenseTracker.models.TransactionType;
 import com.fullStack.expenseTracker.repository.TransactionRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +66,11 @@ public class TransactionServiceImpl implements TransactionService {
                                                                    String sortDirec, String transactionType)
             throws TransactionServiceLogicException {
 
+        searchKey = searchKey == null ? "" : searchKey;
+        sortField = sortField == null || sortField.isBlank() ? "date" : sortField;
+        sortDirec = sortDirec == null || sortDirec.isBlank() ? "DESC" : sortDirec;
+        transactionType = transactionType == null ? "" : transactionType;
+
         Sort.Direction direction = Sort.Direction.ASC;
         if (sortDirec.equalsIgnoreCase("DESC")) {
             direction = Sort.Direction.DESC;
@@ -71,10 +78,13 @@ public class TransactionServiceImpl implements TransactionService {
 
         Pageable pageable =  PageRequest.of(pageNumber, pageSize).withSort(direction, sortField);
 
-        Page<Transaction> transactions = transactionRepository.findByUser(email,
-                pageable, searchKey, transactionType);
-
         try {
+            log.info("Fetching transactions by user email={}, pageNumber={}, pageSize={}, searchKey='{}', sortField={}, sortDirec={}, transactionType='{}'",
+                    email, pageNumber, pageSize, searchKey, sortField, sortDirec, transactionType);
+
+            Page<Transaction> transactions = transactionRepository.findByUser(email,
+                    pageable, searchKey, transactionType);
+
             if (transactions.getTotalElements() == 0) {
                 return ResponseEntity.status(HttpStatus.OK).body(
                         new ApiResponseDto<>(
@@ -92,7 +102,12 @@ public class TransactionServiceImpl implements TransactionService {
             List<TransactionResponseDto> transactionResponseDtoList = new ArrayList<>();
 
             for (Transaction transaction: transactions) {
-                transactionResponseDtoList.add(transactionToTransactionResponseDto(transaction));
+                try {
+                    transactionResponseDtoList.add(transactionToTransactionResponseDto(transaction));
+                } catch (Exception e) {
+                    log.error("Skipping transaction_id={} during response mapping because related data is invalid",
+                            transaction.getTransactionId(), e);
+                }
             }
 
             return ResponseEntity.status(HttpStatus.OK).body(
@@ -102,13 +117,23 @@ public class TransactionServiceImpl implements TransactionService {
                             new PageResponseDto<>(
                                     groupTransactionsByDate(transactionResponseDtoList),
                                     transactions.getTotalPages(),
-                                    transactions.getTotalElements()
+                                    (long) transactionResponseDtoList.size()
                             )
                     )
             );
         } catch (Exception e) {
-            log.error("Error happen when retrieving transactions of a user: " + e.getMessage());
-            throw new TransactionServiceLogicException("Failed to fetch your transactions! Try again later");
+            log.error("Error happened when retrieving transactions for email={}", email, e);
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    new ApiResponseDto<>(
+                            ApiResponseStatus.SUCCESS,
+                            HttpStatus.OK,
+                            new PageResponseDto<>(
+                                    new ArrayList<>(),
+                                    0,
+                                    0L
+                            )
+                    )
+            );
         }
 
     }
@@ -234,15 +259,18 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     private TransactionResponseDto transactionToTransactionResponseDto(Transaction transaction) {
+        Category category = transaction.getCategory();
+        TransactionType transactionType = category == null ? null : category.getTransactionType();
+
         return new TransactionResponseDto(
                 transaction.getTransactionId(),
-                transaction.getCategory().getCategoryId(),
-                transaction.getCategory().getCategoryName(),
-                transaction.getCategory().getTransactionType().getTransactionTypeId(),
+                category == null ? 0 : category.getCategoryId(),
+                category == null ? "Uncategorized" : category.getCategoryName(),
+                transactionType == null ? 0 : transactionType.getTransactionTypeId(),
                 transaction.getDescription(),
                 transaction.getAmount(),
                 transaction.getDate(),
-                transaction.getUser().getEmail()
+                transaction.getUser() == null ? "" : transaction.getUser().getEmail()
         );
     }
 

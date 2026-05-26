@@ -17,14 +17,21 @@ import java.util.List;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
-    @Query(value = "SELECT t.*, c.category_id AS c_category_id, c.category_name AS c_category_name, " +
-            "u.id AS u_id, u.email AS u_email, " +
-            "tt.transaction_type_id AS tt_transaction_type_id, tt.transaction_type_name AS tt_transaction_type_name " +
-            "FROM transactions t JOIN category c ON t.category_id = c.category_id JOIN users u ON t.user_id = u.id " +
-            "JOIN transaction_type tt ON c.transaction_type_id = tt.transaction_type_id " +
-            "WHERE u.email = :email and tt.transaction_type_name LIKE %:transactionType% and " +
-            "(t.description LIKE %:searchKey% OR c.category_name LIKE %:searchKey%)", nativeQuery = true)
-    Page<Transaction> findByUser(String email, Pageable pageable, String searchKey, String transactionType);
+    @Query("""
+            SELECT t
+            FROM Transaction t
+            JOIN t.user u
+            LEFT JOIN t.category c
+            LEFT JOIN c.transactionType tt
+            WHERE u.email = :email
+              AND (:transactionType = '' OR LOWER(CAST(tt.transactionTypeName AS string)) LIKE LOWER(CONCAT('%', :transactionType, '%')))
+              AND (:searchKey = '' OR LOWER(COALESCE(t.description, '')) LIKE LOWER(CONCAT('%', :searchKey, '%'))
+                   OR LOWER(COALESCE(c.categoryName, '')) LIKE LOWER(CONCAT('%', :searchKey, '%')))
+            """)
+    Page<Transaction> findByUser(@Param("email") String email,
+                                 Pageable pageable,
+                                 @Param("searchKey") String searchKey,
+                                 @Param("transactionType") String transactionType);
 
     @Query(value = "SELECT t.*, c.category_id AS c_category_id, c.category_name AS c_category_name, " +
             "u.id AS u_id, u.email AS u_email, " +
