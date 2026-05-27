@@ -227,8 +227,8 @@ public class UserServiceImpl implements UserService {
                         LocalDate.now().getMonthValue(),
                         LocalDate.now().getYear()
                 ),
-                transactionRepository.findTotalNoOfTransactionsByUser(user.getId(), LocalDate.now().getMonthValue(),
-                        LocalDate.now().getYear())
+                Math.toIntExact(transactionRepository.findTotalNoOfTransactionsByUser(user.getId(), LocalDate.now().getMonthValue(),
+                        LocalDate.now().getYear()))
         );
     }
 
